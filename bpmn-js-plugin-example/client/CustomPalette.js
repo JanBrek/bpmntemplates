@@ -1,7 +1,8 @@
 class CustomPalette {
-  constructor(create, elementFactory, palette, translate) {
+  constructor(create, elementFactory, bpmnFactory, palette, translate) {
     this.create = create;
     this.elementFactory = elementFactory;
+	this.bpmnFactory = bpmnFactory;
     this.translate = translate;
 
     palette.registerProvider(this);
@@ -11,20 +12,25 @@ class CustomPalette {
     const {
       create,
       elementFactory,
+	  bpmnFactory,
       translate
     } = this;
 
     function createServiceTask(event) {
-      const shape = elementFactory.createShape({ type: 'bpmn:ServiceTask' });
+      const businessObject = bpmnFactory.create("vng:zaken");
+      const shape = elementFactory.createShape({ type: 'vng:zaken',  businessObject: businessObject, x:10, y:10 });
+	  console.log('the shape', shape);
+
 
       create.start(event, shape);
     }
 
     return {
       'create.service-task': {
-        group: 'activity',
+        group: 'vng',
         className: 'bpmn-icon-service-task',
-        title: translate('Create ServiceTask'),
+        title: translate('Create ZaakTask'),
+		//imageUrl: Cat.dataURL,
         action: {
           dragstart: createServiceTask,
           click: createServiceTask
@@ -37,14 +43,10 @@ class CustomPalette {
 CustomPalette.$inject = [
   'create',
   'elementFactory',
+  'bpmnFactory',
   'palette',
   'translate'
 ];
-
-// export default2 {
-//   __init__: [ 'CustomPalette' ],
-//   CustomPalette: [ 'type', CustomPalette ]
-// };
 
 module.exports = {
     __init__: ['CustomPalette'],

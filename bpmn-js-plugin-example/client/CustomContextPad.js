@@ -21,7 +21,7 @@ class CustomContextPad {
 
     function appendServiceTask(event, element) {
       if (autoPlace) {
-        const shape = elementFactory.createShape({ type: 'bpmn:ServiceTask' });
+        const shape = elementFactory.createShape({ type: 'vng:zaken', x:10, y:10 });
   
         autoPlace.append(element, shape);
       } else {
@@ -30,16 +30,16 @@ class CustomContextPad {
     }
 
     function appendServiceTaskStart(event) {
-      const shape = elementFactory.createShape({ type: 'bpmn:ServiceTask' });
+      const shape = elementFactory.createShape({ type: 'vng:zaken', x:10, y:10 });
   
       create.start(event, shape, element);
     }
 
     return {
       'append.service-task': {
-        group: 'model',
+        group: 'vng',
         className: 'bpmn-icon-service-task',
-        title: translate('Append ServiceTask'),
+        title: translate('Append ZaakTask'),
         action: {
           click: appendServiceTask,
           dragstart: appendServiceTaskStart
