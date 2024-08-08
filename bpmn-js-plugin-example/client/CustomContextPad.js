@@ -21,7 +21,8 @@ class CustomContextPad {
 
     function appendServiceTask(event, element) {
       if (autoPlace) {
-        const shape = elementFactory.createShape({ type: 'vng:zaken', x:10, y:10 });
+        const businessObject = bpmnFactory.create("vng:zaken");
+        const shape = elementFactory.createShape({ type: 'vng:zaken',  businessObject: businessObject, x:10, y:10 });
   
         autoPlace.append(element, shape);
       } else {
@@ -30,7 +31,8 @@ class CustomContextPad {
     }
 
     function appendServiceTaskStart(event) {
-      const shape = elementFactory.createShape({ type: 'vng:zaken', x:10, y:10 });
+      const businessObject = bpmnFactory.create("vng:zaken");
+      const shape = elementFactory.createShape({ type: 'vng:zaken',  businessObject: businessObject, x:10, y:10 });
   
       create.start(event, shape, element);
     }
