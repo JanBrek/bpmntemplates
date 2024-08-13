@@ -19,7 +19,7 @@ class CustomPalette {
     function createServiceTask(event) {
       const businessObject = bpmnFactory.create("vng:zaken");
       const shape = elementFactory.createShape({ type: 'vng:zaken',  businessObject: businessObject, x:10, y:10 });
-	  console.log('the shape', shape);
+	    //console.log('the shape', shape);
 
 
       create.start(event, shape);

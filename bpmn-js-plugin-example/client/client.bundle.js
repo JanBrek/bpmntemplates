@@ -108,7 +108,7 @@ class CustomPalette {
     function createServiceTask(event) {
       const businessObject = bpmnFactory.create("vng:zaken");
       const shape = elementFactory.createShape({ type: 'vng:zaken',  businessObject: businessObject, x:10, y:10 });
-	  console.log('the shape', shape);
+	    //console.log('the shape', shape);
 
 
       create.start(event, shape);
@@ -156,7 +156,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var diagram_js_lib_draw_BaseRenderer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! diagram-js/lib/draw/BaseRenderer */ "./node_modules/diagram-js/lib/draw/BaseRenderer.js");
+/* harmony import */ var min_dash__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! min-dash */ "./node_modules/min-dash/dist/index.esm.js");
 /* harmony import */ var bpmn_js_lib_features_modeling_util_ModelingUtil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bpmn-js/lib/features/modeling/util/ModelingUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var bpmn_js_lib_draw_BpmnRenderUtil__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! bpmn-js/lib/draw/BpmnRenderUtil */ "./node_modules/bpmn-js/lib/draw/BpmnRenderUtil.js");
 /* harmony import */ var tiny_svg__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! tiny-svg */ "./node_modules/tiny-svg/dist/index.esm.js");
 
 //import BaseRenderer from 'diagram-js/lib/draw/BaseRenderer';
@@ -171,14 +173,21 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+
+
+
 const HIGH_PRIORITY = 1500,
       TASK_BORDER_RADIUS = 2;
 
 class CustomRenderer extends diagram_js_lib_draw_BaseRenderer__WEBPACK_IMPORTED_MODULE_0__["default"] {
-  constructor(eventBus, bpmnRenderer) {
+  constructor(eventBus, bpmnRenderer, textRenderer) {
     super(eventBus, HIGH_PRIORITY);
 
     this.bpmnRenderer = bpmnRenderer;
+    this.textRenderer = textRenderer
   }
   
   canRender(element) {
@@ -187,8 +196,9 @@ class CustomRenderer extends diagram_js_lib_draw_BaseRenderer__WEBPACK_IMPORTED_
   }
   
   drawShape(parentNode, element) {
-	
+
 	if (element.type === "vng:zaken") {
+
       const rect = (0,tiny_svg__WEBPACK_IMPORTED_MODULE_2__.create)("rect");
 
       rect.setAttribute("width", element.width);
@@ -197,7 +207,20 @@ class CustomRenderer extends diagram_js_lib_draw_BaseRenderer__WEBPACK_IMPORTED_
       rect.setAttribute("fill", "white");
       rect.setAttribute("stroke-width", 2);
 	  
-	  (0,tiny_svg__WEBPACK_IMPORTED_MODULE_2__.append)(parentNode, rect);
+      (0,tiny_svg__WEBPACK_IMPORTED_MODULE_2__.append)(parentNode, rect);
+      
+
+	  // Adding text
+	  //this.bpmnRenderer.renderEmbeddedLabel(parentNode, rect, 'center-middle');
+	  //this.renderEmbeddedLabel(parentNode, element, rect, { align: 'center-middle', style: { fill: "#000" } });
+	  
+    // Last try - Maybe: https://codesandbox.io/s/custom-render-texts-qzhr1m?file=/src/render/CustomRenderer.js ??
+    renderEmbeddedLabel(parentNode, element, 'center-middle', this.textRenderer);
+
+	  
+	  
+
+    console.log('parent', parentNode);
 	
 	  const rect2 = (0,tiny_svg__WEBPACK_IMPORTED_MODULE_2__.create)("image");
 
@@ -213,26 +236,31 @@ class CustomRenderer extends diagram_js_lib_draw_BaseRenderer__WEBPACK_IMPORTED_
 
       return rect;
     }
-	
-    // const shape = this.bpmnRenderer.drawShape(parentNode, element);
-    //
-    // if (is(element, 'bpmn:Task')) {
-    //   const rect = drawRect(parentNode, 100, 80, TASK_BORDER_RADIUS, '#52B415');
-	// 
-    //   prependTo(rect, parentNode);
-	// 
-    //   svgRemove(shape);
-	// 
-    //   return shape;
-    // }
-	// 
-    // const rect = drawRect(parentNode, 30, 20, TASK_BORDER_RADIUS, '#cc0000');
-	// 
-    // svgAttr(rect, {
-    //   transform: 'translate(-20, -10)'
-    // });
 
-    return shape;
+    //return shape;
+  }
+
+
+  
+  // // Taken from https://github.com/camunda/camunda-modeler/blob/5efd998bf12b28acf483f6a7656a528f955c4520/client/src/app/tabs/dmn/modeler/features/overview/overview-renderer/OverviewRenderer.js#L223
+  // renderLabel(p, label, options) {
+  //   var text = this.textRenderer.createText(label || '', assign({ style: { fill: "#000" } }, options || {}));
+
+  //   domAttr(text, 'class', 'djs-label');
+
+  //   svgAppend(p, text);
+
+  //   return text;
+  // }
+
+  // renderEmbeddedLabel(p, mainEl, element, options) {
+  //   var name = this.getName(element);
+  //   //console.log('element', mainEl);
+  //   return this.renderLabel(p, name, assign({ box: element, padding: 5 }, options || {}));
+  // }
+
+  getName(element){
+    return element.name
   }
   
   getShapePath(shape) {
@@ -244,15 +272,68 @@ class CustomRenderer extends diagram_js_lib_draw_BaseRenderer__WEBPACK_IMPORTED_
       ["l", -width, 0],
       ["z"]
     ];
-    // if (is(shape, 'bpmn:Task')) {
-    //   return getRoundRectPath(shape, TASK_BORDER_RADIUS);
-    // }
-	// 
-    // return this.bpmnRenderer.getShapePath(shape);
   }
 }
 
-CustomRenderer.$inject = [ 'eventBus', 'bpmnRenderer' ];
+function renderLabel(parentGfx, label, textRenderer, attrs = {}) {
+  attrs = (0,min_dash__WEBPACK_IMPORTED_MODULE_3__.assign)({
+    size: {
+      width: 100
+    }
+  }, attrs);
+
+  var text = textRenderer.createText(label || '', attrs);
+
+  (0,tiny_svg__WEBPACK_IMPORTED_MODULE_2__.classes)(text).add('djs-label');
+
+  (0,tiny_svg__WEBPACK_IMPORTED_MODULE_2__.append)(parentGfx, text);
+
+  return text;
+}
+
+function renderEmbeddedLabel(parentGfx, element, align, textRenderer, attrs = {}) {
+  var semantic = (0,bpmn_js_lib_features_modeling_util_ModelingUtil__WEBPACK_IMPORTED_MODULE_1__.getBusinessObject)(element);
+
+  var box = (0,bpmn_js_lib_draw_BpmnRenderUtil__WEBPACK_IMPORTED_MODULE_4__.getBounds)({
+    x: element.x,
+    y: element.y,
+    width: element.width,
+    height: element.height
+  }, attrs);
+
+  return renderLabel(parentGfx, semantic.name, textRenderer, {
+    align,
+    box,
+    padding: 7,
+    style: {
+      fill: "#000"
+    }
+  });
+}
+
+function drawRect(parentNode, width, height, borderRadius, strokeColor) {
+  const rect = (0,tiny_svg__WEBPACK_IMPORTED_MODULE_2__.create)("rect");
+
+  (0,tiny_svg__WEBPACK_IMPORTED_MODULE_2__.attr)(rect, {
+    width: width,
+    height: height,
+    rx: borderRadius,
+    ry: borderRadius,
+    stroke: strokeColor || "#000",
+    strokeWidth: 2,
+    fill: "#fff"
+  });
+
+  (0,tiny_svg__WEBPACK_IMPORTED_MODULE_2__.append)(parentNode, rect);
+
+  return rect;
+}
+
+function prependTo(newNode, parentNode, siblingNode) {
+  parentNode.insertBefore(newNode, siblingNode || parentNode.firstChild);
+}
+
+CustomRenderer.$inject = [ 'eventBus', 'bpmnRenderer', 'textRenderer' ];
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
@@ -260,13 +341,6 @@ CustomRenderer.$inject = [ 'eventBus', 'bpmnRenderer' ];
   CustomRenderer: [ 'type', CustomRenderer ]
 });
 
-// module.exports = {
-//     __init__: ['CustomRenderer'],
-//     CustomRenderer: ['type', CustomRenderer]
-// };
-
-
-//  rect.setAttribute("href", "data:image/png;base64,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");
 
 /***/ }),
 
@@ -307,6 +381,286 @@ LoggingPlugin.$inject = [ 'eventBus', 'canvas' ];
 
 /***/ }),
 
+/***/ "./node_modules/bpmn-js/lib/draw/BpmnRenderUtil.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/bpmn-js/lib/draw/BpmnRenderUtil.js ***!
+  \*********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   black: () => (/* binding */ black),
+/* harmony export */   getBounds: () => (/* binding */ getBounds),
+/* harmony export */   getCirclePath: () => (/* binding */ getCirclePath),
+/* harmony export */   getDi: () => (/* reexport safe */ _util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.getDi),
+/* harmony export */   getDiamondPath: () => (/* binding */ getDiamondPath),
+/* harmony export */   getFillColor: () => (/* binding */ getFillColor),
+/* harmony export */   getHeight: () => (/* binding */ getHeight),
+/* harmony export */   getLabelColor: () => (/* binding */ getLabelColor),
+/* harmony export */   getRectPath: () => (/* binding */ getRectPath),
+/* harmony export */   getRoundRectPath: () => (/* binding */ getRoundRectPath),
+/* harmony export */   getSemantic: () => (/* reexport safe */ _util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.getBusinessObject),
+/* harmony export */   getStrokeColor: () => (/* binding */ getStrokeColor),
+/* harmony export */   getWidth: () => (/* binding */ getWidth),
+/* harmony export */   isCollection: () => (/* binding */ isCollection),
+/* harmony export */   isThrowEvent: () => (/* binding */ isThrowEvent),
+/* harmony export */   isTypedEvent: () => (/* binding */ isTypedEvent),
+/* harmony export */   white: () => (/* binding */ white)
+/* harmony export */ });
+/* harmony import */ var min_dash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! min-dash */ "./node_modules/min-dash/dist/index.esm.js");
+/* harmony import */ var _util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/ModelUtil */ "./node_modules/bpmn-js/lib/util/ModelUtil.js");
+/* harmony import */ var diagram_js_lib_util_RenderUtil__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! diagram-js/lib/util/RenderUtil */ "./node_modules/diagram-js/lib/util/RenderUtil.js");
+
+
+
+
+
+
+
+/**
+ * @typedef {import('../model').ModdleElement} ModdleElement
+ * @typedef {import('../model').Element} Element
+ *
+ * @typedef {import('../model').ShapeLike} ShapeLike
+ *
+ * @typedef {import('diagram-js/lib/util/Types').Dimensions} Dimensions
+ * @typedef {import('diagram-js/lib/util/Types').Rect} Rect
+ */
+
+// re-export for compatibility
+
+
+
+var black = 'hsl(225, 10%, 15%)';
+var white = 'white';
+
+// element utils //////////////////////
+
+/**
+ * Checks if eventDefinition of the given element matches with semantic type.
+ *
+ * @param {ModdleElement} event
+ * @param {string} eventDefinitionType
+ *
+ * @return {boolean}
+ */
+function isTypedEvent(event, eventDefinitionType) {
+  return (0,min_dash__WEBPACK_IMPORTED_MODULE_1__.some)(event.eventDefinitions, function(definition) {
+    return definition.$type === eventDefinitionType;
+  });
+}
+
+/**
+ * Check if element is a throw event.
+ *
+ * @param {ModdleElement} event
+ *
+ * @return {boolean}
+ */
+function isThrowEvent(event) {
+  return (event.$type === 'bpmn:IntermediateThrowEvent') || (event.$type === 'bpmn:EndEvent');
+}
+
+/**
+ * Check if element is a throw event.
+ *
+ * @param {ModdleElement} element
+ *
+ * @return {boolean}
+ */
+function isCollection(element) {
+  var dataObject = element.dataObjectRef;
+
+  return element.isCollection || (dataObject && dataObject.isCollection);
+}
+
+
+// color access //////////////////////
+
+/**
+ * @param {Element} element
+ * @param {string} [defaultColor]
+ * @param {string} [overrideColor]
+ *
+ * @return {string}
+ */
+function getFillColor(element, defaultColor, overrideColor) {
+  var di = (0,_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.getDi)(element);
+
+  return overrideColor || di.get('color:background-color') || di.get('bioc:fill') || defaultColor || white;
+}
+
+/**
+ * @param {Element} element
+ * @param {string} [defaultColor]
+ * @param {string} [overrideColor]
+ *
+ * @return {string}
+ */
+function getStrokeColor(element, defaultColor, overrideColor) {
+  var di = (0,_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.getDi)(element);
+
+  return overrideColor || di.get('color:border-color') || di.get('bioc:stroke') || defaultColor || black;
+}
+
+/**
+ * @param {Element} element
+ * @param {string} [defaultColor]
+ * @param {string} [defaultStrokeColor]
+ * @param {string} [overrideColor]
+ *
+ * @return {string}
+ */
+function getLabelColor(element, defaultColor, defaultStrokeColor, overrideColor) {
+  var di = (0,_util_ModelUtil__WEBPACK_IMPORTED_MODULE_0__.getDi)(element),
+      label = di.get('label');
+
+  return overrideColor || (label && label.get('color:color')) || defaultColor ||
+    getStrokeColor(element, defaultStrokeColor);
+}
+
+// cropping path customizations //////////////////////
+
+/**
+ * @param {ShapeLike} shape
+ *
+ * @return {string} path
+ */
+function getCirclePath(shape) {
+
+  var cx = shape.x + shape.width / 2,
+      cy = shape.y + shape.height / 2,
+      radius = shape.width / 2;
+
+  var circlePath = [
+    [ 'M', cx, cy ],
+    [ 'm', 0, -radius ],
+    [ 'a', radius, radius, 0, 1, 1, 0, 2 * radius ],
+    [ 'a', radius, radius, 0, 1, 1, 0, -2 * radius ],
+    [ 'z' ]
+  ];
+
+  return (0,diagram_js_lib_util_RenderUtil__WEBPACK_IMPORTED_MODULE_2__.componentsToPath)(circlePath);
+}
+
+/**
+ * @param {ShapeLike} shape
+ * @param {number} [borderRadius]
+ *
+ * @return {string} path
+ */
+function getRoundRectPath(shape, borderRadius) {
+
+  var x = shape.x,
+      y = shape.y,
+      width = shape.width,
+      height = shape.height;
+
+  var roundRectPath = [
+    [ 'M', x + borderRadius, y ],
+    [ 'l', width - borderRadius * 2, 0 ],
+    [ 'a', borderRadius, borderRadius, 0, 0, 1, borderRadius, borderRadius ],
+    [ 'l', 0, height - borderRadius * 2 ],
+    [ 'a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, borderRadius ],
+    [ 'l', borderRadius * 2 - width, 0 ],
+    [ 'a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, -borderRadius ],
+    [ 'l', 0, borderRadius * 2 - height ],
+    [ 'a', borderRadius, borderRadius, 0, 0, 1, borderRadius, -borderRadius ],
+    [ 'z' ]
+  ];
+
+  return (0,diagram_js_lib_util_RenderUtil__WEBPACK_IMPORTED_MODULE_2__.componentsToPath)(roundRectPath);
+}
+
+/**
+ * @param {ShapeLike} shape
+ *
+ * @return {string} path
+ */
+function getDiamondPath(shape) {
+
+  var width = shape.width,
+      height = shape.height,
+      x = shape.x,
+      y = shape.y,
+      halfWidth = width / 2,
+      halfHeight = height / 2;
+
+  var diamondPath = [
+    [ 'M', x + halfWidth, y ],
+    [ 'l', halfWidth, halfHeight ],
+    [ 'l', -halfWidth, halfHeight ],
+    [ 'l', -halfWidth, -halfHeight ],
+    [ 'z' ]
+  ];
+
+  return (0,diagram_js_lib_util_RenderUtil__WEBPACK_IMPORTED_MODULE_2__.componentsToPath)(diamondPath);
+}
+
+/**
+ * @param {ShapeLike} shape
+ *
+ * @return {string} path
+ */
+function getRectPath(shape) {
+  var x = shape.x,
+      y = shape.y,
+      width = shape.width,
+      height = shape.height;
+
+  var rectPath = [
+    [ 'M', x, y ],
+    [ 'l', width, 0 ],
+    [ 'l', 0, height ],
+    [ 'l', -width, 0 ],
+    [ 'z' ]
+  ];
+
+  return (0,diagram_js_lib_util_RenderUtil__WEBPACK_IMPORTED_MODULE_2__.componentsToPath)(rectPath);
+}
+
+/**
+ * Get width and height from element or overrides.
+ *
+ * @param {Dimensions|Rect|ShapeLike} bounds
+ * @param {Object} overrides
+ *
+ * @returns {Dimensions}
+ */
+function getBounds(bounds, overrides = {}) {
+  return {
+    width: getWidth(bounds, overrides),
+    height: getHeight(bounds, overrides)
+  };
+}
+
+/**
+ * Get width from element or overrides.
+ *
+ * @param {Dimensions|Rect|ShapeLike} bounds
+ * @param {Object} overrides
+ *
+ * @returns {number}
+ */
+function getWidth(bounds, overrides = {}) {
+  return (0,min_dash__WEBPACK_IMPORTED_MODULE_1__.has)(overrides, 'width') ? overrides.width : bounds.width;
+}
+
+/**
+ * Get height from element or overrides.
+ *
+ * @param {Dimensions|Rect|ShapeLike} bounds
+ * @param {Object} overrides
+ *
+ * @returns {number}
+ */
+function getHeight(bounds, overrides = {}) {
+  return (0,min_dash__WEBPACK_IMPORTED_MODULE_1__.has)(overrides, 'height') ? overrides.height : bounds.height;
+}
+
+/***/ }),
+
 /***/ "./node_modules/bpmn-js/lib/util/ModelUtil.js":
 /*!****************************************************!*\
   !*** ./node_modules/bpmn-js/lib/util/ModelUtil.js ***!
@@ -316,19 +670,23 @@ LoggingPlugin.$inject = [ 'eventBus', 'canvas' ];
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "getBusinessObject": () => (/* binding */ getBusinessObject),
-/* harmony export */   "getDi": () => (/* binding */ getDi),
-/* harmony export */   "is": () => (/* binding */ is),
-/* harmony export */   "isAny": () => (/* binding */ isAny)
+/* harmony export */   getBusinessObject: () => (/* binding */ getBusinessObject),
+/* harmony export */   getDi: () => (/* binding */ getDi),
+/* harmony export */   is: () => (/* binding */ is),
+/* harmony export */   isAny: () => (/* binding */ isAny)
 /* harmony export */ });
 /* harmony import */ var min_dash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! min-dash */ "./node_modules/min-dash/dist/index.esm.js");
 
 
+/**
+ * @typedef { import('../model/Types').Element } Element
+ * @typedef { import('../model/Types').ModdleElement } ModdleElement
+ */
 
 /**
  * Is an element of the given BPMN type?
  *
- * @param  {djs.model.Base|ModdleElement} element
+ * @param  {Element|ModdleElement} element
  * @param  {string} type
  *
  * @return {boolean}
@@ -343,8 +701,8 @@ function is(element, type) {
 /**
  * Return true if element has any of the given types.
  *
- * @param {djs.model.Base} element
- * @param {Array<string>} types
+ * @param {Element|ModdleElement} element
+ * @param {string[]} types
  *
  * @return {boolean}
  */
@@ -357,7 +715,7 @@ function isAny(element, types) {
 /**
  * Return the business object for a given element.
  *
- * @param  {djs.model.Base|ModdleElement} element
+ * @param {Element|ModdleElement} element
  *
  * @return {ModdleElement}
  */
@@ -368,14 +726,12 @@ function getBusinessObject(element) {
 /**
  * Return the di object for a given element.
  *
- * @param  {djs.model.Base} element
+ * @param {Element} element
  *
  * @return {ModdleElement}
  */
 function getDi(element) {
-  var bo = getBusinessObject(element);
-
-  return bo && bo.di;
+  return element && element.di;
 }
 
 /***/ }),
@@ -389,18 +745,22 @@ function getDi(element) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "getModelerDirectory": () => (/* binding */ getModelerDirectory),
-/* harmony export */   "getPluginsDirectory": () => (/* binding */ getPluginsDirectory),
-/* harmony export */   "registerBpmnJSModdleExtension": () => (/* binding */ registerBpmnJSModdleExtension),
-/* harmony export */   "registerBpmnJSPlugin": () => (/* binding */ registerBpmnJSPlugin),
-/* harmony export */   "registerClientExtension": () => (/* binding */ registerClientExtension),
-/* harmony export */   "registerClientPlugin": () => (/* binding */ registerClientPlugin),
-/* harmony export */   "registerCloudBpmnJSModdleExtension": () => (/* binding */ registerCloudBpmnJSModdleExtension),
-/* harmony export */   "registerCloudBpmnJSPlugin": () => (/* binding */ registerCloudBpmnJSPlugin),
-/* harmony export */   "registerDmnJSModdleExtension": () => (/* binding */ registerDmnJSModdleExtension),
-/* harmony export */   "registerDmnJSPlugin": () => (/* binding */ registerDmnJSPlugin),
-/* harmony export */   "registerPlatformBpmnJSModdleExtension": () => (/* binding */ registerPlatformBpmnJSModdleExtension),
-/* harmony export */   "registerPlatformBpmnJSPlugin": () => (/* binding */ registerPlatformBpmnJSPlugin)
+/* harmony export */   getModelerDirectory: () => (/* binding */ getModelerDirectory),
+/* harmony export */   getPluginsDirectory: () => (/* binding */ getPluginsDirectory),
+/* harmony export */   registerBpmnJSModdleExtension: () => (/* binding */ registerBpmnJSModdleExtension),
+/* harmony export */   registerBpmnJSPlugin: () => (/* binding */ registerBpmnJSPlugin),
+/* harmony export */   registerClientExtension: () => (/* binding */ registerClientExtension),
+/* harmony export */   registerClientPlugin: () => (/* binding */ registerClientPlugin),
+/* harmony export */   registerCloudBpmnJSModdleExtension: () => (/* binding */ registerCloudBpmnJSModdleExtension),
+/* harmony export */   registerCloudBpmnJSPlugin: () => (/* binding */ registerCloudBpmnJSPlugin),
+/* harmony export */   registerCloudDmnJSModdleExtension: () => (/* binding */ registerCloudDmnJSModdleExtension),
+/* harmony export */   registerCloudDmnJSPlugin: () => (/* binding */ registerCloudDmnJSPlugin),
+/* harmony export */   registerDmnJSModdleExtension: () => (/* binding */ registerDmnJSModdleExtension),
+/* harmony export */   registerDmnJSPlugin: () => (/* binding */ registerDmnJSPlugin),
+/* harmony export */   registerPlatformBpmnJSModdleExtension: () => (/* binding */ registerPlatformBpmnJSModdleExtension),
+/* harmony export */   registerPlatformBpmnJSPlugin: () => (/* binding */ registerPlatformBpmnJSPlugin),
+/* harmony export */   registerPlatformDmnJSModdleExtension: () => (/* binding */ registerPlatformDmnJSModdleExtension),
+/* harmony export */   registerPlatformDmnJSPlugin: () => (/* binding */ registerPlatformDmnJSPlugin)
 /* harmony export */ });
 /**
  * Validate and register a client plugin.
@@ -604,6 +964,54 @@ function registerDmnJSModdleExtension(descriptor) {
 }
 
 /**
+ * Validate and register a cloud specific dmn-moddle extension plugin.
+ *
+ * @param {Object} descriptor
+ *
+ * @example
+ * import {
+ *   registerCloudDmnJSModdleExtension
+ * } from 'camunda-modeler-plugin-helpers';
+ *
+ * var moddleDescriptor = {
+ *   name: 'my descriptor',
+ *   uri: 'http://example.my.company.localhost/schema/my-descriptor/1.0',
+ *   prefix: 'mydesc',
+ *
+ *   ...
+ * };
+ *
+ * registerCloudDmnJSModdleExtension(moddleDescriptor);
+ */
+function registerCloudDmnJSModdleExtension(descriptor) {
+  registerClientPlugin(descriptor, 'dmn.cloud.modeler.moddleExtension');
+}
+
+/**
+ * Validate and register a platform specific dmn-moddle extension plugin.
+ *
+ * @param {Object} descriptor
+ *
+ * @example
+ * import {
+ *   registerPlatformDmnJSModdleExtension
+ * } from 'camunda-modeler-plugin-helpers';
+ *
+ * var moddleDescriptor = {
+ *   name: 'my descriptor',
+ *   uri: 'http://example.my.company.localhost/schema/my-descriptor/1.0',
+ *   prefix: 'mydesc',
+ *
+ *   ...
+ * };
+ *
+ * registerPlatformDmnJSModdleExtension(moddleDescriptor);
+ */
+function registerPlatformDmnJSModdleExtension(descriptor) {
+  registerClientPlugin(descriptor, 'dmn.platform.modeler.moddleExtension');
+}
+
+/**
  * Validate and register a dmn-js plugin.
  *
  * @param {Object} module
@@ -628,7 +1036,63 @@ function registerDmnJSPlugin(module, components) {
     components = [ components ]
   }
 
-  components.forEach(c => registerClientPlugin(module, `dmn.modeler.${c}.additionalModules`)); 
+  components.forEach(c => registerClientPlugin(module, `dmn.modeler.${c}.additionalModules`));
+}
+
+/**
+ * Validate and register a cloud specific dmn-js plugin.
+ *
+ * @param {Object} module
+ *
+ * @example
+ *
+ * import {
+ *   registerCloudDmnJSPlugin
+ * } from 'camunda-modeler-plugin-helpers';
+ *
+ * const DmnJSModule = {
+ *   __init__: [ 'myService' ],
+ *   myService: [ 'type', ... ]
+ * };
+ *
+ * registerCloudDmnJSPlugin(DmnJSModule, [ 'drd', 'literalExpression' ]);
+ * registerCloudDmnJSPlugin(DmnJSModule, 'drd')
+ */
+function registerCloudDmnJSPlugin(module, components) {
+
+  if (!Array.isArray(components)) {
+    components = [ components ]
+  }
+
+  components.forEach(c => registerClientPlugin(module, `dmn.cloud.modeler.${c}.additionalModules`));
+}
+
+/**
+ * Validate and register a platform specific dmn-js plugin.
+ *
+ * @param {Object} module
+ *
+ * @example
+ *
+ * import {
+ *   registerPlatformDmnJSPlugin
+ * } from 'camunda-modeler-plugin-helpers';
+ *
+ * const DmnJSModule = {
+ *   __init__: [ 'myService' ],
+ *   myService: [ 'type', ... ]
+ * };
+ *
+ * registerPlatformDmnJSPlugin(DmnJSModule, [ 'drd', 'literalExpression' ]);
+ * registerPlatformDmnJSPlugin(DmnJSModule, 'drd')
+ */
+function registerPlatformDmnJSPlugin(module, components) {
+
+  if (!Array.isArray(components)) {
+    components = [ components ]
+  }
+
+  components.forEach(c => registerClientPlugin(module, `dmn.platform.modeler.${c}.additionalModules`));
 }
 
 /**
@@ -669,6 +1133,14 @@ __webpack_require__.r(__webpack_exports__);
 var DEFAULT_RENDER_PRIORITY = 1000;
 
 /**
+ * @typedef {import('../core/Types').ElementLike} Element
+ * @typedef {import('../core/Types').ConnectionLike} Connection
+ * @typedef {import('../core/Types').ShapeLike} Shape
+ *
+ * @typedef {import('../core/EventBus').default} EventBus
+ */
+
+/**
  * The base implementation of shape and connection renderers.
  *
  * @param {EventBus} eventBus
@@ -694,7 +1166,7 @@ function BaseRenderer(eventBus, renderPriority) {
     }
   });
 
-  eventBus.on([ 'render.getShapePath', 'render.getConnectionPath'], renderPriority, function(evt, element) {
+  eventBus.on([ 'render.getShapePath', 'render.getConnectionPath' ], renderPriority, function(evt, element) {
     if (self.canRender(element)) {
       if (evt.type === 'render.getShapePath') {
         return self.getShapePath(element);
@@ -706,797 +1178,244 @@ function BaseRenderer(eventBus, renderPriority) {
 }
 
 /**
- * Should check whether *this* renderer can render
- * the element/connection.
+ * Checks whether an element can be rendered.
  *
- * @param {element} element
+ * @param {Element} element The element to be rendered.
  *
- * @returns {boolean}
+ * @return {boolean} Whether the element can be rendered.
  */
-BaseRenderer.prototype.canRender = function() {};
+BaseRenderer.prototype.canRender = function(element) {};
 
 /**
- * Provides the shape's snap svg element to be drawn on the `canvas`.
+ * Draws a shape.
  *
- * @param {djs.Graphics} visuals
- * @param {Shape} shape
+ * @param {SVGElement} visuals The SVG element to draw the shape into.
+ * @param {Shape} shape The shape to be drawn.
  *
- * @returns {Snap.svg} [returns a Snap.svg paper element ]
+ * @return {SVGElement} The SVG element of the shape drawn.
  */
-BaseRenderer.prototype.drawShape = function() {};
+BaseRenderer.prototype.drawShape = function(visuals, shape) {};
 
 /**
- * Provides the shape's snap svg element to be drawn on the `canvas`.
+ * Draws a connection.
  *
- * @param {djs.Graphics} visuals
- * @param {Connection} connection
+ * @param {SVGElement} visuals The SVG element to draw the connection into.
+ * @param {Connection} connection The connection to be drawn.
  *
- * @returns {Snap.svg} [returns a Snap.svg paper element ]
+ * @return {SVGElement} The SVG element of the connection drawn.
  */
-BaseRenderer.prototype.drawConnection = function() {};
+BaseRenderer.prototype.drawConnection = function(visuals, connection) {};
 
 /**
- * Gets the SVG path of a shape that represents it's visual bounds.
+ * Gets the SVG path of the graphical representation of a shape.
  *
- * @param {Shape} shape
+ * @param {Shape} shape The shape.
  *
- * @return {string} svg path
+ * @return {string} The SVG path of the shape.
  */
-BaseRenderer.prototype.getShapePath = function() {};
+BaseRenderer.prototype.getShapePath = function(shape) {};
 
 /**
- * Gets the SVG path of a connection that represents it's visual bounds.
+ * Gets the SVG path of the graphical representation of a connection.
  *
- * @param {Connection} connection
+ * @param {Connection} connection The connection.
  *
- * @return {string} svg path
+ * @return {string} The SVG path of the connection.
  */
-BaseRenderer.prototype.getConnectionPath = function() {};
+BaseRenderer.prototype.getConnectionPath = function(connection) {};
 
 
 /***/ }),
 
-/***/ "./node_modules/min-dash/dist/index.esm.js":
-/*!*************************************************!*\
-  !*** ./node_modules/min-dash/dist/index.esm.js ***!
-  \*************************************************/
+/***/ "./node_modules/diagram-js/lib/util/RenderUtil.js":
+/*!********************************************************!*\
+  !*** ./node_modules/diagram-js/lib/util/RenderUtil.js ***!
+  \********************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "assign": () => (/* binding */ assign),
-/* harmony export */   "bind": () => (/* binding */ bind),
-/* harmony export */   "debounce": () => (/* binding */ debounce),
-/* harmony export */   "ensureArray": () => (/* binding */ ensureArray),
-/* harmony export */   "every": () => (/* binding */ every),
-/* harmony export */   "filter": () => (/* binding */ filter),
-/* harmony export */   "find": () => (/* binding */ find),
-/* harmony export */   "findIndex": () => (/* binding */ findIndex),
-/* harmony export */   "flatten": () => (/* binding */ flatten),
-/* harmony export */   "forEach": () => (/* binding */ forEach),
-/* harmony export */   "get": () => (/* binding */ get),
-/* harmony export */   "groupBy": () => (/* binding */ groupBy),
-/* harmony export */   "has": () => (/* binding */ has),
-/* harmony export */   "isArray": () => (/* binding */ isArray),
-/* harmony export */   "isDefined": () => (/* binding */ isDefined),
-/* harmony export */   "isFunction": () => (/* binding */ isFunction),
-/* harmony export */   "isNil": () => (/* binding */ isNil),
-/* harmony export */   "isNumber": () => (/* binding */ isNumber),
-/* harmony export */   "isObject": () => (/* binding */ isObject),
-/* harmony export */   "isString": () => (/* binding */ isString),
-/* harmony export */   "isUndefined": () => (/* binding */ isUndefined),
-/* harmony export */   "keys": () => (/* binding */ keys),
-/* harmony export */   "map": () => (/* binding */ map),
-/* harmony export */   "matchPattern": () => (/* binding */ matchPattern),
-/* harmony export */   "merge": () => (/* binding */ merge),
-/* harmony export */   "omit": () => (/* binding */ omit),
-/* harmony export */   "pick": () => (/* binding */ pick),
-/* harmony export */   "reduce": () => (/* binding */ reduce),
-/* harmony export */   "set": () => (/* binding */ set),
-/* harmony export */   "size": () => (/* binding */ size),
-/* harmony export */   "some": () => (/* binding */ some),
-/* harmony export */   "sortBy": () => (/* binding */ sortBy),
-/* harmony export */   "throttle": () => (/* binding */ throttle),
-/* harmony export */   "unionBy": () => (/* binding */ unionBy),
-/* harmony export */   "uniqueBy": () => (/* binding */ uniqueBy),
-/* harmony export */   "values": () => (/* binding */ values),
-/* harmony export */   "without": () => (/* binding */ without)
+/* harmony export */   componentsToPath: () => (/* binding */ componentsToPath),
+/* harmony export */   createLine: () => (/* binding */ createLine),
+/* harmony export */   toSVGPoints: () => (/* binding */ toSVGPoints),
+/* harmony export */   updateLine: () => (/* binding */ updateLine)
 /* harmony export */ });
-/**
- * Flatten array, one level deep.
- *
- * @param {Array<?>} arr
- *
- * @return {Array<?>}
- */
-function flatten(arr) {
-  return Array.prototype.concat.apply([], arr);
-}
+/* harmony import */ var min_dash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! min-dash */ "./node_modules/min-dash/dist/index.esm.js");
+/* harmony import */ var tiny_svg__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! tiny-svg */ "./node_modules/tiny-svg/dist/index.esm.js");
 
-var nativeToString = Object.prototype.toString;
-var nativeHasOwnProperty = Object.prototype.hasOwnProperty;
-function isUndefined(obj) {
-  return obj === undefined;
-}
-function isDefined(obj) {
-  return obj !== undefined;
-}
-function isNil(obj) {
-  return obj == null;
-}
-function isArray(obj) {
-  return nativeToString.call(obj) === '[object Array]';
-}
-function isObject(obj) {
-  return nativeToString.call(obj) === '[object Object]';
-}
-function isNumber(obj) {
-  return nativeToString.call(obj) === '[object Number]';
-}
-function isFunction(obj) {
-  var tag = nativeToString.call(obj);
-  return tag === '[object Function]' || tag === '[object AsyncFunction]' || tag === '[object GeneratorFunction]' || tag === '[object AsyncGeneratorFunction]' || tag === '[object Proxy]';
-}
-function isString(obj) {
-  return nativeToString.call(obj) === '[object String]';
-}
+
+
+
+
 /**
- * Ensure collection is an array.
+ * @typedef {(string|number)[]} Component
  *
- * @param {Object} obj
+ * @typedef {import('../util/Types').Point} Point
  */
 
-function ensureArray(obj) {
-  if (isArray(obj)) {
-    return;
+/**
+ * @param {Component[] | Component[][]} elements
+ *
+ * @return {string}
+ */
+function componentsToPath(elements) {
+  return elements.flat().join(',').replace(/,?([A-z]),?/g, '$1');
+}
+
+/**
+ * @param {Point[]} points
+ *
+ * @return {string}
+ */
+function toSVGPoints(points) {
+  var result = '';
+
+  for (var i = 0, p; (p = points[i]); i++) {
+    result += p.x + ',' + p.y + ' ';
   }
 
-  throw new Error('must supply array');
-}
-/**
- * Return true, if target owns a property with the given key.
- *
- * @param {Object} target
- * @param {String} key
- *
- * @return {Boolean}
- */
-
-function has(target, key) {
-  return nativeHasOwnProperty.call(target, key);
-}
-
-/**
- * Find element in collection.
- *
- * @param  {Array|Object} collection
- * @param  {Function|Object} matcher
- *
- * @return {Object}
- */
-
-function find(collection, matcher) {
-  matcher = toMatcher(matcher);
-  var match;
-  forEach(collection, function (val, key) {
-    if (matcher(val, key)) {
-      match = val;
-      return false;
-    }
-  });
-  return match;
-}
-/**
- * Find element index in collection.
- *
- * @param  {Array|Object} collection
- * @param  {Function} matcher
- *
- * @return {Object}
- */
-
-function findIndex(collection, matcher) {
-  matcher = toMatcher(matcher);
-  var idx = isArray(collection) ? -1 : undefined;
-  forEach(collection, function (val, key) {
-    if (matcher(val, key)) {
-      idx = key;
-      return false;
-    }
-  });
-  return idx;
-}
-/**
- * Find element in collection.
- *
- * @param  {Array|Object} collection
- * @param  {Function} matcher
- *
- * @return {Array} result
- */
-
-function filter(collection, matcher) {
-  var result = [];
-  forEach(collection, function (val, key) {
-    if (matcher(val, key)) {
-      result.push(val);
-    }
-  });
   return result;
 }
+
 /**
- * Iterate over collection; returning something
- * (non-undefined) will stop iteration.
+ * @param {Point} point
  *
- * @param  {Array|Object} collection
- * @param  {Function} iterator
- *
- * @return {Object} return result that stopped the iteration
+ * @return {Component[]}
  */
-
-function forEach(collection, iterator) {
-  var val, result;
-
-  if (isUndefined(collection)) {
-    return;
-  }
-
-  var convertKey = isArray(collection) ? toNum : identity;
-
-  for (var key in collection) {
-    if (has(collection, key)) {
-      val = collection[key];
-      result = iterator(val, convertKey(key));
-
-      if (result === false) {
-        return val;
-      }
-    }
-  }
+function move(point) {
+  return [ 'M', point.x, point.y ];
 }
+
 /**
- * Return collection without element.
+ * @param {Point} point
  *
- * @param  {Array} arr
- * @param  {Function} matcher
- *
- * @return {Array}
+ * @return {Component[]}
  */
-
-function without(arr, matcher) {
-  if (isUndefined(arr)) {
-    return [];
-  }
-
-  ensureArray(arr);
-  matcher = toMatcher(matcher);
-  return arr.filter(function (el, idx) {
-    return !matcher(el, idx);
-  });
+function lineTo(point) {
+  return [ 'L', point.x, point.y ];
 }
-/**
- * Reduce collection, returning a single result.
- *
- * @param  {Object|Array} collection
- * @param  {Function} iterator
- * @param  {Any} result
- *
- * @return {Any} result returned from last iterator
- */
 
-function reduce(collection, iterator, result) {
-  forEach(collection, function (value, idx) {
-    result = iterator(result, value, idx);
-  });
-  return result;
+/**
+ * @param {Point} p1
+ * @param {Point} p2
+ * @param {Point} p3
+ *
+ * @return {Component[]}
+ */
+function curveTo(p1, p2, p3) {
+  return [ 'C', p1.x, p1.y, p2.x, p2.y, p3.x, p3.y ];
 }
+
 /**
- * Return true if every element in the collection
- * matches the criteria.
- *
- * @param  {Object|Array} collection
- * @param  {Function} matcher
- *
- * @return {Boolean}
+ * @param {Point[]} waypoints
+ * @param {number} [cornerRadius]
+ * @return {Component[][]}
  */
+function drawPath(waypoints, cornerRadius) {
+  const pointCount = waypoints.length;
 
-function every(collection, matcher) {
-  return !!reduce(collection, function (matches, val, key) {
-    return matches && matcher(val, key);
-  }, true);
-}
-/**
- * Return true if some elements in the collection
- * match the criteria.
- *
- * @param  {Object|Array} collection
- * @param  {Function} matcher
- *
- * @return {Boolean}
- */
+  const path = [ move(waypoints[0]) ];
 
-function some(collection, matcher) {
-  return !!find(collection, matcher);
-}
-/**
- * Transform a collection into another collection
- * by piping each member through the given fn.
- *
- * @param  {Object|Array}   collection
- * @param  {Function} fn
- *
- * @return {Array} transformed collection
- */
+  for (let i = 1; i < pointCount; i++) {
 
-function map(collection, fn) {
-  var result = [];
-  forEach(collection, function (val, key) {
-    result.push(fn(val, key));
-  });
-  return result;
-}
-/**
- * Get the collections keys.
- *
- * @param  {Object|Array} collection
- *
- * @return {Array}
- */
+    const pointBefore = waypoints[i - 1];
+    const point = waypoints[i];
+    const pointAfter = waypoints[i + 1];
 
-function keys(collection) {
-  return collection && Object.keys(collection) || [];
-}
-/**
- * Shorthand for `keys(o).length`.
- *
- * @param  {Object|Array} collection
- *
- * @return {Number}
- */
+    if (!pointAfter || !cornerRadius) {
+      path.push(lineTo(point));
 
-function size(collection) {
-  return keys(collection).length;
-}
-/**
- * Get the values in the collection.
- *
- * @param  {Object|Array} collection
- *
- * @return {Array}
- */
-
-function values(collection) {
-  return map(collection, function (val) {
-    return val;
-  });
-}
-/**
- * Group collection members by attribute.
- *
- * @param  {Object|Array} collection
- * @param  {Function} extractor
- *
- * @return {Object} map with { attrValue => [ a, b, c ] }
- */
-
-function groupBy(collection, extractor) {
-  var grouped = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-  extractor = toExtractor(extractor);
-  forEach(collection, function (val) {
-    var discriminator = extractor(val) || '_';
-    var group = grouped[discriminator];
-
-    if (!group) {
-      group = grouped[discriminator] = [];
+      continue;
     }
 
-    group.push(val);
-  });
-  return grouped;
-}
-function uniqueBy(extractor) {
-  extractor = toExtractor(extractor);
-  var grouped = {};
+    const effectiveRadius = Math.min(
+      cornerRadius,
+      vectorLength(point.x - pointBefore.x, point.y - pointBefore.y),
+      vectorLength(pointAfter.x - point.x, pointAfter.y - point.y)
+    );
 
-  for (var _len = arguments.length, collections = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    collections[_key - 1] = arguments[_key];
+    if (!effectiveRadius) {
+      path.push(lineTo(point));
+
+      continue;
+    }
+
+    const beforePoint = getPointAtLength(point, pointBefore, effectiveRadius);
+    const beforePoint2 = getPointAtLength(point, pointBefore, effectiveRadius * .5);
+
+    const afterPoint = getPointAtLength(point, pointAfter, effectiveRadius);
+    const afterPoint2 = getPointAtLength(point, pointAfter, effectiveRadius * .5);
+
+    path.push(lineTo(beforePoint));
+    path.push(curveTo(beforePoint2, afterPoint2, afterPoint));
   }
 
-  forEach(collections, function (c) {
-    return groupBy(c, extractor, grouped);
-  });
-  var result = map(grouped, function (val, key) {
-    return val[0];
-  });
-  return result;
+  return path;
 }
-var unionBy = uniqueBy;
-/**
- * Sort collection by criteria.
- *
- * @param  {Object|Array} collection
- * @param  {String|Function} extractor
- *
- * @return {Array}
- */
 
-function sortBy(collection, extractor) {
-  extractor = toExtractor(extractor);
-  var sorted = [];
-  forEach(collection, function (value, key) {
-    var disc = extractor(value, key);
-    var entry = {
-      d: disc,
-      v: value
-    };
+function getPointAtLength(start, end, length) {
 
-    for (var idx = 0; idx < sorted.length; idx++) {
-      var d = sorted[idx].d;
+  const deltaX = end.x - start.x;
+  const deltaY = end.y - start.y;
 
-      if (disc < d) {
-        sorted.splice(idx, 0, entry);
-        return;
-      }
-    } // not inserted, append (!)
+  const totalLength = vectorLength(deltaX, deltaY);
 
+  const percent = length / totalLength;
 
-    sorted.push(entry);
-  });
-  return map(sorted, function (e) {
-    return e.v;
-  });
-}
-/**
- * Create an object pattern matcher.
- *
- * @example
- *
- * const matcher = matchPattern({ id: 1 });
- *
- * let element = find(elements, matcher);
- *
- * @param  {Object} pattern
- *
- * @return {Function} matcherFn
- */
-
-function matchPattern(pattern) {
-  return function (el) {
-    return every(pattern, function (val, key) {
-      return el[key] === val;
-    });
+  return {
+    x: start.x + deltaX * percent,
+    y: start.y + deltaY * percent
   };
 }
 
-function toExtractor(extractor) {
-  return isFunction(extractor) ? extractor : function (e) {
-    return e[extractor];
-  };
-}
-
-function toMatcher(matcher) {
-  return isFunction(matcher) ? matcher : function (e) {
-    return e === matcher;
-  };
-}
-
-function identity(arg) {
-  return arg;
-}
-
-function toNum(arg) {
-  return Number(arg);
+function vectorLength(x, y) {
+  return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 }
 
 /**
- * Debounce fn, calling it only once if the given time
- * elapsed between calls.
+ * @param {Point[]} points
+ * @param {number|Object} [attrs]
+ * @param {number} [radius]
  *
- * Lodash-style the function exposes methods to `#clear`
- * and `#flush` to control internal behavior.
- *
- * @param  {Function} fn
- * @param  {Number} timeout
- *
- * @return {Function} debounced function
+ * @return {SVGElement}
  */
-function debounce(fn, timeout) {
-  var timer;
-  var lastArgs;
-  var lastThis;
-  var lastNow;
+function createLine(points, attrs, radius) {
 
-  function fire(force) {
-    var now = Date.now();
-    var scheduledDiff = force ? 0 : lastNow + timeout - now;
-
-    if (scheduledDiff > 0) {
-      return schedule(scheduledDiff);
-    }
-
-    fn.apply(lastThis, lastArgs);
-    clear();
+  if ((0,min_dash__WEBPACK_IMPORTED_MODULE_0__.isNumber)(attrs)) {
+    radius = attrs;
+    attrs = null;
   }
 
-  function schedule(timeout) {
-    timer = setTimeout(fire, timeout);
+  if (!attrs) {
+    attrs = {};
   }
 
-  function clear() {
-    if (timer) {
-      clearTimeout(timer);
-    }
+  const line = (0,tiny_svg__WEBPACK_IMPORTED_MODULE_1__.create)('path', attrs);
 
-    timer = lastNow = lastArgs = lastThis = undefined;
+  if ((0,min_dash__WEBPACK_IMPORTED_MODULE_0__.isNumber)(radius)) {
+    line.dataset.cornerRadius = String(radius);
   }
 
-  function flush() {
-    if (timer) {
-      fire(true);
-    }
-
-    clear();
-  }
-
-  function callback() {
-    lastNow = Date.now();
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    lastArgs = args;
-    lastThis = this; // ensure an execution is scheduled
-
-    if (!timer) {
-      schedule(timeout);
-    }
-  }
-
-  callback.flush = flush;
-  callback.cancel = clear;
-  return callback;
-}
-/**
- * Throttle fn, calling at most once
- * in the given interval.
- *
- * @param  {Function} fn
- * @param  {Number} interval
- *
- * @return {Function} throttled function
- */
-
-function throttle(fn, interval) {
-  var throttling = false;
-  return function () {
-    if (throttling) {
-      return;
-    }
-
-    fn.apply(void 0, arguments);
-    throttling = true;
-    setTimeout(function () {
-      throttling = false;
-    }, interval);
-  };
-}
-/**
- * Bind function against target <this>.
- *
- * @param  {Function} fn
- * @param  {Object}   target
- *
- * @return {Function} bound function
- */
-
-function bind(fn, target) {
-  return fn.bind(target);
-}
-
-function _typeof(obj) {
-  "@babel/helpers - typeof";
-
-  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-    _typeof = function (obj) {
-      return typeof obj;
-    };
-  } else {
-    _typeof = function (obj) {
-      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    };
-  }
-
-  return _typeof(obj);
-}
-
-function _extends() {
-  _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-
-    return target;
-  };
-
-  return _extends.apply(this, arguments);
+  return updateLine(line, points);
 }
 
 /**
- * Convenience wrapper for `Object.assign`.
+ * @param {SVGElement} gfx
+ * @param {Point[]} points
  *
- * @param {Object} target
- * @param {...Object} others
- *
- * @return {Object} the target
+ * @return {SVGElement}
  */
+function updateLine(gfx, points) {
 
-function assign(target) {
-  for (var _len = arguments.length, others = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    others[_key - 1] = arguments[_key];
-  }
+  const cornerRadius = parseInt(gfx.dataset.cornerRadius, 10) || 0;
 
-  return _extends.apply(void 0, [target].concat(others));
-}
-/**
- * Sets a nested property of a given object to the specified value.
- *
- * This mutates the object and returns it.
- *
- * @param {Object} target The target of the set operation.
- * @param {(string|number)[]} path The path to the nested value.
- * @param {any} value The value to set.
- */
-
-function set(target, path, value) {
-  var currentTarget = target;
-  forEach(path, function (key, idx) {
-    if (typeof key !== 'number' && typeof key !== 'string') {
-      throw new Error('illegal key type: ' + _typeof(key) + '. Key should be of type number or string.');
-    }
-
-    if (key === 'constructor') {
-      throw new Error('illegal key: constructor');
-    }
-
-    if (key === '__proto__') {
-      throw new Error('illegal key: __proto__');
-    }
-
-    var nextKey = path[idx + 1];
-    var nextTarget = currentTarget[key];
-
-    if (isDefined(nextKey) && isNil(nextTarget)) {
-      nextTarget = currentTarget[key] = isNaN(+nextKey) ? {} : [];
-    }
-
-    if (isUndefined(nextKey)) {
-      if (isUndefined(value)) {
-        delete currentTarget[key];
-      } else {
-        currentTarget[key] = value;
-      }
-    } else {
-      currentTarget = nextTarget;
-    }
+  (0,tiny_svg__WEBPACK_IMPORTED_MODULE_1__.attr)(gfx, {
+    d: componentsToPath(drawPath(points, cornerRadius))
   });
-  return target;
+
+  return gfx;
 }
-/**
- * Gets a nested property of a given object.
- *
- * @param {Object} target The target of the get operation.
- * @param {(string|number)[]} path The path to the nested value.
- * @param {any} [defaultValue] The value to return if no value exists.
- */
-
-function get(target, path, defaultValue) {
-  var currentTarget = target;
-  forEach(path, function (key) {
-    // accessing nil property yields <undefined>
-    if (isNil(currentTarget)) {
-      currentTarget = undefined;
-      return false;
-    }
-
-    currentTarget = currentTarget[key];
-  });
-  return isUndefined(currentTarget) ? defaultValue : currentTarget;
-}
-/**
- * Pick given properties from the target object.
- *
- * @param {Object} target
- * @param {Array} properties
- *
- * @return {Object} target
- */
-
-function pick(target, properties) {
-  var result = {};
-  var obj = Object(target);
-  forEach(properties, function (prop) {
-    if (prop in obj) {
-      result[prop] = target[prop];
-    }
-  });
-  return result;
-}
-/**
- * Pick all target properties, excluding the given ones.
- *
- * @param {Object} target
- * @param {Array} properties
- *
- * @return {Object} target
- */
-
-function omit(target, properties) {
-  var result = {};
-  var obj = Object(target);
-  forEach(obj, function (prop, key) {
-    if (properties.indexOf(key) === -1) {
-      result[key] = prop;
-    }
-  });
-  return result;
-}
-/**
- * Recursively merge `...sources` into given target.
- *
- * Does support merging objects; does not support merging arrays.
- *
- * @param {Object} target
- * @param {...Object} sources
- *
- * @return {Object} the target
- */
-
-function merge(target) {
-  for (var _len2 = arguments.length, sources = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-    sources[_key2 - 1] = arguments[_key2];
-  }
-
-  if (!sources.length) {
-    return target;
-  }
-
-  forEach(sources, function (source) {
-    // skip non-obj sources, i.e. null
-    if (!source || !isObject(source)) {
-      return;
-    }
-
-    forEach(source, function (sourceVal, key) {
-      if (key === '__proto__') {
-        return;
-      }
-
-      var targetVal = target[key];
-
-      if (isObject(sourceVal)) {
-        if (!isObject(targetVal)) {
-          // override target[key] with object
-          targetVal = {};
-        }
-
-        target[key] = merge(targetVal, sourceVal);
-      } else {
-        target[key] = sourceVal;
-      }
-    });
-  });
-  return target;
-}
-
-
 
 
 /***/ }),
@@ -1510,34 +1429,36 @@ function merge(target) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "append": () => (/* binding */ append),
-/* harmony export */   "appendTo": () => (/* binding */ appendTo),
-/* harmony export */   "attr": () => (/* binding */ attr),
-/* harmony export */   "classes": () => (/* binding */ classes),
-/* harmony export */   "clear": () => (/* binding */ clear),
-/* harmony export */   "clone": () => (/* binding */ clone),
-/* harmony export */   "create": () => (/* binding */ create),
-/* harmony export */   "createMatrix": () => (/* binding */ createMatrix),
-/* harmony export */   "createPoint": () => (/* binding */ createPoint),
-/* harmony export */   "createTransform": () => (/* binding */ createTransform),
-/* harmony export */   "innerSVG": () => (/* binding */ innerSVG),
-/* harmony export */   "off": () => (/* binding */ off),
-/* harmony export */   "on": () => (/* binding */ on),
-/* harmony export */   "prepend": () => (/* binding */ prepend),
-/* harmony export */   "prependTo": () => (/* binding */ prependTo),
-/* harmony export */   "remove": () => (/* binding */ remove),
-/* harmony export */   "replace": () => (/* binding */ replace),
-/* harmony export */   "select": () => (/* binding */ select),
-/* harmony export */   "selectAll": () => (/* binding */ selectAll),
-/* harmony export */   "transform": () => (/* binding */ transform)
+/* harmony export */   append: () => (/* binding */ append),
+/* harmony export */   appendTo: () => (/* binding */ appendTo),
+/* harmony export */   attr: () => (/* binding */ attr),
+/* harmony export */   classes: () => (/* binding */ classes),
+/* harmony export */   clear: () => (/* binding */ clear),
+/* harmony export */   clone: () => (/* binding */ clone),
+/* harmony export */   create: () => (/* binding */ create),
+/* harmony export */   createMatrix: () => (/* binding */ createMatrix),
+/* harmony export */   createPoint: () => (/* binding */ createPoint),
+/* harmony export */   createTransform: () => (/* binding */ createTransform),
+/* harmony export */   innerSVG: () => (/* binding */ innerSVG),
+/* harmony export */   off: () => (/* binding */ off),
+/* harmony export */   on: () => (/* binding */ on),
+/* harmony export */   prepend: () => (/* binding */ prepend),
+/* harmony export */   prependTo: () => (/* binding */ prependTo),
+/* harmony export */   remove: () => (/* binding */ remove),
+/* harmony export */   replace: () => (/* binding */ replace),
+/* harmony export */   select: () => (/* binding */ select),
+/* harmony export */   selectAll: () => (/* binding */ selectAll),
+/* harmony export */   transform: () => (/* binding */ transform)
 /* harmony export */ });
 function ensureImported(element, target) {
 
   if (element.ownerDocument !== target.ownerDocument) {
     try {
+
       // may fail on webkit
       return target.ownerDocument.importNode(element, true);
     } catch (e) {
+
       // ignore
     }
   }
@@ -1548,6 +1469,7 @@ function ensureImported(element, target) {
 /**
  * appendTo utility
  */
+
 
 /**
  * Append a node to a target element and return the appended node.
@@ -1564,6 +1486,7 @@ function appendTo(element, target) {
 /**
  * append utility
  */
+
 
 /**
  * Append a node to an element
@@ -1663,6 +1586,7 @@ function setAttribute(node, name, value) {
   var type = CSS_PROPERTIES[hyphenated];
 
   if (type) {
+
     // append pixel unit, unless present
     if (type === LENGTH_ATTR && typeof value === 'number') {
       value = String(value) + 'px';
@@ -1708,38 +1632,24 @@ function attr(node, name, value) {
 }
 
 /**
- * Clear utility
+ * Taken from https://github.com/component/classes
+ *
+ * Without the component bits.
  */
-function index(arr, obj) {
-  if (arr.indexOf) {
-    return arr.indexOf(obj);
-  }
-
-
-  for (var i = 0; i < arr.length; ++i) {
-    if (arr[i] === obj) {
-      return i;
-    }
-  }
-
-  return -1;
-}
-
-var re = /\s+/;
-
-var toString = Object.prototype.toString;
-
-function defined(o) {
-  return typeof o !== 'undefined';
-}
 
 /**
- * Wrap `el` in a `ClassList`.
- *
- * @param {Element} el
- * @return {ClassList}
- * @api public
+ * toString reference.
  */
+
+const toString = Object.prototype.toString;
+
+/**
+  * Wrap `el` in a `ClassList`.
+  *
+  * @param {Element} el
+  * @return {ClassList}
+  * @api public
+  */
 
 function classes(el) {
   return new ClassList(el);
@@ -1754,79 +1664,48 @@ function ClassList(el) {
 }
 
 /**
- * Add class `name` if not already present.
- *
- * @param {String} name
- * @return {ClassList}
- * @api public
- */
+  * Add class `name` if not already present.
+  *
+  * @param {String} name
+  * @return {ClassList}
+  * @api public
+  */
 
 ClassList.prototype.add = function(name) {
-
-  // classList
-  if (this.list) {
-    this.list.add(name);
-    return this;
-  }
-
-  // fallback
-  var arr = this.array();
-  var i = index(arr, name);
-  if (!~i) {
-    arr.push(name);
-  }
-
-  if (defined(this.el.className.baseVal)) {
-    this.el.className.baseVal = arr.join(' ');
-  } else {
-    this.el.className = arr.join(' ');
-  }
-
+  this.list.add(name);
   return this;
 };
 
 /**
- * Remove class `name` when present, or
- * pass a regular expression to remove
- * any which match.
- *
- * @param {String|RegExp} name
- * @return {ClassList}
- * @api public
- */
+  * Remove class `name` when present, or
+  * pass a regular expression to remove
+  * any which match.
+  *
+  * @param {String|RegExp} name
+  * @return {ClassList}
+  * @api public
+  */
 
 ClassList.prototype.remove = function(name) {
-  if ('[object RegExp]' === toString.call(name)) {
+  if ('[object RegExp]' == toString.call(name)) {
     return this.removeMatching(name);
   }
 
-  // classList
-  if (this.list) {
-    this.list.remove(name);
-    return this;
-  }
-
-  // fallback
-  var arr = this.array();
-  var i = index(arr, name);
-  if (~i) {
-    arr.splice(i, 1);
-  }
-  this.el.className.baseVal = arr.join(' ');
+  this.list.remove(name);
   return this;
 };
 
 /**
- * Remove all classes matching `re`.
- *
- * @param {RegExp} re
- * @return {ClassList}
- * @api private
- */
+  * Remove all classes matching `re`.
+  *
+  * @param {RegExp} re
+  * @return {ClassList}
+  * @api private
+  */
 
 ClassList.prototype.removeMatching = function(re) {
-  var arr = this.array();
-  for (var i = 0; i < arr.length; i++) {
+  const arr = this.array();
+  for (let i = 0; i < arr.length; i++) {
     if (re.test(arr[i])) {
       this.remove(arr[i]);
     }
@@ -1835,91 +1714,51 @@ ClassList.prototype.removeMatching = function(re) {
 };
 
 /**
- * Toggle class `name`, can force state via `force`.
- *
- * For browsers that support classList, but do not support `force` yet,
- * the mistake will be detected and corrected.
- *
- * @param {String} name
- * @param {Boolean} force
- * @return {ClassList}
- * @api public
- */
+  * Toggle class `name`, can force state via `force`.
+  *
+  * For browsers that support classList, but do not support `force` yet,
+  * the mistake will be detected and corrected.
+  *
+  * @param {String} name
+  * @param {Boolean} force
+  * @return {ClassList}
+  * @api public
+  */
 
 ClassList.prototype.toggle = function(name, force) {
-  // classList
-  if (this.list) {
-    if (defined(force)) {
-      if (force !== this.list.toggle(name, force)) {
-        this.list.toggle(name); // toggle again to correct
-      }
-    } else {
-      this.list.toggle(name);
-    }
-    return this;
-  }
-
-  // fallback
-  if (defined(force)) {
-    if (!force) {
-      this.remove(name);
-    } else {
-      this.add(name);
+  if ('undefined' !== typeof force) {
+    if (force !== this.list.toggle(name, force)) {
+      this.list.toggle(name); // toggle again to correct
     }
   } else {
-    if (this.has(name)) {
-      this.remove(name);
-    } else {
-      this.add(name);
-    }
+    this.list.toggle(name);
   }
-
   return this;
 };
 
 /**
- * Return an array of classes.
- *
- * @return {Array}
- * @api public
- */
+  * Return an array of classes.
+  *
+  * @return {Array}
+  * @api public
+  */
 
 ClassList.prototype.array = function() {
-  var className = this.el.getAttribute('class') || '';
-  var str = className.replace(/^\s+|\s+$/g, '');
-  var arr = str.split(re);
-  if ('' === arr[0]) {
-    arr.shift();
-  }
-  return arr;
+  return Array.from(this.list);
 };
 
 /**
- * Check if class `name` is present.
- *
- * @param {String} name
- * @return {ClassList}
- * @api public
- */
+  * Check if class `name` is present.
+  *
+  * @param {String} name
+  * @return {ClassList}
+  * @api public
+  */
 
 ClassList.prototype.has =
-ClassList.prototype.contains = function(name) {
-  return (
-    this.list ?
-      this.list.contains(name) :
-      !! ~index(this.array(), name)
-  );
-};
-
-function remove(element) {
-  var parent = element.parentNode;
-
-  if (parent) {
-    parent.removeChild(element);
-  }
-
-  return element;
-}
+ ClassList.prototype.contains = function(name) {
+   return this.list.contains(name);
+ };
 
 /**
  * Clear utility
@@ -1928,14 +1767,14 @@ function remove(element) {
 /**
  * Removes all children from the given element
  *
- * @param  {DOMElement} element
- * @return {DOMElement} the element (for chaining)
+ * @param  {SVGElement} element
+ * @return {Element} the element (for chaining)
  */
 function clear(element) {
   var child;
 
   while ((child = element.firstChild)) {
-    remove(child);
+    element.removeChild(child);
   }
 
   return element;
@@ -1953,6 +1792,7 @@ var ns = {
  * DOM parsing utility
  */
 
+
 var SVG_START = '<svg xmlns="' + ns.svg + '"';
 
 function parse(svg) {
@@ -1965,6 +1805,7 @@ function parse(svg) {
       svg = SVG_START + svg.substring(4);
     }
   } else {
+
     // namespace svg
     svg = SVG_START + '>' + svg + '</svg>';
     unwrap = true;
@@ -2003,6 +1844,7 @@ function parseDocument(svg) {
  */
 
 
+
 /**
  * Create a specific type from name or SVG markup.
  *
@@ -2013,6 +1855,8 @@ function parseDocument(svg) {
  */
 function create(name, attrs) {
   var element;
+
+  name = name.trim();
 
   if (name.charAt(0) === '<') {
     element = parse(name).firstChild;
@@ -2043,6 +1887,7 @@ function off(node, event, listener, useCapture) {
 /**
  * Geometry helpers
  */
+
 
 // fake node used to instantiate svg geometry elements
 var node = null;
@@ -2150,8 +1995,10 @@ function serialize(node, output) {
   var i, len, attrMap, attrNode, childNodes;
 
   switch (node.nodeType) {
+
   // TEXT
   case 3:
+
     // replace special XML characters
     output.push(escape(node.textContent, TEXT_ENTITIES));
     break;
@@ -2203,6 +2050,7 @@ function serialize(node, output) {
  */
 
 
+
 function set(element, svg) {
 
   var parsed = parse(svg);
@@ -2215,6 +2063,7 @@ function set(element, svg) {
   }
 
   if (!isFragment(parsed)) {
+
     // extract <svg> from parsed document
     parsed = parsed.documentElement;
   }
@@ -2285,6 +2134,7 @@ function selectAll(node, selector) {
  * prependTo utility
  */
 
+
 /**
  * Prepend a node to a target element and return the prepended node.
  *
@@ -2301,6 +2151,7 @@ function prependTo(node, target) {
  * prepend utility
  */
 
+
 /**
  * Prepend a node to a target element
  *
@@ -2314,9 +2165,20 @@ function prepend(target, node) {
   return target;
 }
 
+function remove(element) {
+  var parent = element.parentNode;
+
+  if (parent) {
+    parent.removeChild(element);
+  }
+
+  return element;
+}
+
 /**
  * Replace utility
  */
+
 
 function replace(element, replacement) {
   element.parentNode.replaceChild(ensureImported(replacement, element), element);
@@ -2374,6 +2236,929 @@ function transform(node, transforms) {
 
 /***/ }),
 
+/***/ "./node_modules/min-dash/dist/index.esm.js":
+/*!*************************************************!*\
+  !*** ./node_modules/min-dash/dist/index.esm.js ***!
+  \*************************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   assign: () => (/* binding */ assign),
+/* harmony export */   bind: () => (/* binding */ bind),
+/* harmony export */   debounce: () => (/* binding */ debounce),
+/* harmony export */   ensureArray: () => (/* binding */ ensureArray),
+/* harmony export */   every: () => (/* binding */ every),
+/* harmony export */   filter: () => (/* binding */ filter),
+/* harmony export */   find: () => (/* binding */ find),
+/* harmony export */   findIndex: () => (/* binding */ findIndex),
+/* harmony export */   flatten: () => (/* binding */ flatten),
+/* harmony export */   forEach: () => (/* binding */ forEach),
+/* harmony export */   get: () => (/* binding */ get),
+/* harmony export */   groupBy: () => (/* binding */ groupBy),
+/* harmony export */   has: () => (/* binding */ has),
+/* harmony export */   isArray: () => (/* binding */ isArray),
+/* harmony export */   isDefined: () => (/* binding */ isDefined),
+/* harmony export */   isFunction: () => (/* binding */ isFunction),
+/* harmony export */   isNil: () => (/* binding */ isNil),
+/* harmony export */   isNumber: () => (/* binding */ isNumber),
+/* harmony export */   isObject: () => (/* binding */ isObject),
+/* harmony export */   isString: () => (/* binding */ isString),
+/* harmony export */   isUndefined: () => (/* binding */ isUndefined),
+/* harmony export */   keys: () => (/* binding */ keys),
+/* harmony export */   map: () => (/* binding */ map),
+/* harmony export */   matchPattern: () => (/* binding */ matchPattern),
+/* harmony export */   merge: () => (/* binding */ merge),
+/* harmony export */   omit: () => (/* binding */ omit),
+/* harmony export */   pick: () => (/* binding */ pick),
+/* harmony export */   reduce: () => (/* binding */ reduce),
+/* harmony export */   set: () => (/* binding */ set),
+/* harmony export */   size: () => (/* binding */ size),
+/* harmony export */   some: () => (/* binding */ some),
+/* harmony export */   sortBy: () => (/* binding */ sortBy),
+/* harmony export */   throttle: () => (/* binding */ throttle),
+/* harmony export */   unionBy: () => (/* binding */ unionBy),
+/* harmony export */   uniqueBy: () => (/* binding */ uniqueBy),
+/* harmony export */   values: () => (/* binding */ values),
+/* harmony export */   without: () => (/* binding */ without)
+/* harmony export */ });
+/**
+ * Flatten array, one level deep.
+ *
+ * @template T
+ *
+ * @param {T[][] | T[] | null} [arr]
+ *
+ * @return {T[]}
+ */
+function flatten(arr) {
+  return Array.prototype.concat.apply([], arr);
+}
+
+const nativeToString = Object.prototype.toString;
+const nativeHasOwnProperty = Object.prototype.hasOwnProperty;
+
+function isUndefined(obj) {
+  return obj === undefined;
+}
+
+function isDefined(obj) {
+  return obj !== undefined;
+}
+
+function isNil(obj) {
+  return obj == null;
+}
+
+function isArray(obj) {
+  return nativeToString.call(obj) === '[object Array]';
+}
+
+function isObject(obj) {
+  return nativeToString.call(obj) === '[object Object]';
+}
+
+function isNumber(obj) {
+  return nativeToString.call(obj) === '[object Number]';
+}
+
+/**
+ * @param {any} obj
+ *
+ * @return {boolean}
+ */
+function isFunction(obj) {
+  const tag = nativeToString.call(obj);
+
+  return (
+    tag === '[object Function]' ||
+    tag === '[object AsyncFunction]' ||
+    tag === '[object GeneratorFunction]' ||
+    tag === '[object AsyncGeneratorFunction]' ||
+    tag === '[object Proxy]'
+  );
+}
+
+function isString(obj) {
+  return nativeToString.call(obj) === '[object String]';
+}
+
+
+/**
+ * Ensure collection is an array.
+ *
+ * @param {Object} obj
+ */
+function ensureArray(obj) {
+
+  if (isArray(obj)) {
+    return;
+  }
+
+  throw new Error('must supply array');
+}
+
+/**
+ * Return true, if target owns a property with the given key.
+ *
+ * @param {Object} target
+ * @param {String} key
+ *
+ * @return {Boolean}
+ */
+function has(target, key) {
+  return nativeHasOwnProperty.call(target, key);
+}
+
+/**
+ * @template T
+ * @typedef { (
+ *   ((e: T) => boolean) |
+ *   ((e: T, idx: number) => boolean) |
+ *   ((e: T, key: string) => boolean) |
+ *   string |
+ *   number
+ * ) } Matcher
+ */
+
+/**
+ * @template T
+ * @template U
+ *
+ * @typedef { (
+ *   ((e: T) => U) | string | number
+ * ) } Extractor
+ */
+
+
+/**
+ * @template T
+ * @typedef { (val: T, key: any) => boolean } MatchFn
+ */
+
+/**
+ * @template T
+ * @typedef { T[] } ArrayCollection
+ */
+
+/**
+ * @template T
+ * @typedef { { [key: string]: T } } StringKeyValueCollection
+ */
+
+/**
+ * @template T
+ * @typedef { { [key: number]: T } } NumberKeyValueCollection
+ */
+
+/**
+ * @template T
+ * @typedef { StringKeyValueCollection<T> | NumberKeyValueCollection<T> } KeyValueCollection
+ */
+
+/**
+ * @template T
+ * @typedef { KeyValueCollection<T> | ArrayCollection<T> } Collection
+ */
+
+/**
+ * Find element in collection.
+ *
+ * @template T
+ * @param {Collection<T>} collection
+ * @param {Matcher<T>} matcher
+ *
+ * @return {Object}
+ */
+function find(collection, matcher) {
+
+  const matchFn = toMatcher(matcher);
+
+  let match;
+
+  forEach(collection, function(val, key) {
+    if (matchFn(val, key)) {
+      match = val;
+
+      return false;
+    }
+  });
+
+  return match;
+
+}
+
+
+/**
+ * Find element index in collection.
+ *
+ * @template T
+ * @param {Collection<T>} collection
+ * @param {Matcher<T>} matcher
+ *
+ * @return {number}
+ */
+function findIndex(collection, matcher) {
+
+  const matchFn = toMatcher(matcher);
+
+  let idx = isArray(collection) ? -1 : undefined;
+
+  forEach(collection, function(val, key) {
+    if (matchFn(val, key)) {
+      idx = key;
+
+      return false;
+    }
+  });
+
+  return idx;
+}
+
+
+/**
+ * Filter elements in collection.
+ *
+ * @template T
+ * @param {Collection<T>} collection
+ * @param {Matcher<T>} matcher
+ *
+ * @return {T[]} result
+ */
+function filter(collection, matcher) {
+
+  const matchFn = toMatcher(matcher);
+
+  let result = [];
+
+  forEach(collection, function(val, key) {
+    if (matchFn(val, key)) {
+      result.push(val);
+    }
+  });
+
+  return result;
+}
+
+
+/**
+ * Iterate over collection; returning something
+ * (non-undefined) will stop iteration.
+ *
+ * @template T
+ * @param {Collection<T>} collection
+ * @param { ((item: T, idx: number) => (boolean|void)) | ((item: T, key: string) => (boolean|void)) } iterator
+ *
+ * @return {T} return result that stopped the iteration
+ */
+function forEach(collection, iterator) {
+
+  let val,
+      result;
+
+  if (isUndefined(collection)) {
+    return;
+  }
+
+  const convertKey = isArray(collection) ? toNum : identity;
+
+  for (let key in collection) {
+
+    if (has(collection, key)) {
+      val = collection[key];
+
+      result = iterator(val, convertKey(key));
+
+      if (result === false) {
+        return val;
+      }
+    }
+  }
+}
+
+/**
+ * Return collection without element.
+ *
+ * @template T
+ * @param {ArrayCollection<T>} arr
+ * @param {Matcher<T>} matcher
+ *
+ * @return {T[]}
+ */
+function without(arr, matcher) {
+
+  if (isUndefined(arr)) {
+    return [];
+  }
+
+  ensureArray(arr);
+
+  const matchFn = toMatcher(matcher);
+
+  return arr.filter(function(el, idx) {
+    return !matchFn(el, idx);
+  });
+
+}
+
+
+/**
+ * Reduce collection, returning a single result.
+ *
+ * @template T
+ * @template V
+ *
+ * @param {Collection<T>} collection
+ * @param {(result: V, entry: T, index: any) => V} iterator
+ * @param {V} result
+ *
+ * @return {V} result returned from last iterator
+ */
+function reduce(collection, iterator, result) {
+
+  forEach(collection, function(value, idx) {
+    result = iterator(result, value, idx);
+  });
+
+  return result;
+}
+
+
+/**
+ * Return true if every element in the collection
+ * matches the criteria.
+ *
+ * @param  {Object|Array} collection
+ * @param  {Function} matcher
+ *
+ * @return {Boolean}
+ */
+function every(collection, matcher) {
+
+  return !!reduce(collection, function(matches, val, key) {
+    return matches && matcher(val, key);
+  }, true);
+}
+
+
+/**
+ * Return true if some elements in the collection
+ * match the criteria.
+ *
+ * @param  {Object|Array} collection
+ * @param  {Function} matcher
+ *
+ * @return {Boolean}
+ */
+function some(collection, matcher) {
+
+  return !!find(collection, matcher);
+}
+
+
+/**
+ * Transform a collection into another collection
+ * by piping each member through the given fn.
+ *
+ * @param  {Object|Array}   collection
+ * @param  {Function} fn
+ *
+ * @return {Array} transformed collection
+ */
+function map(collection, fn) {
+
+  let result = [];
+
+  forEach(collection, function(val, key) {
+    result.push(fn(val, key));
+  });
+
+  return result;
+}
+
+
+/**
+ * Get the collections keys.
+ *
+ * @param  {Object|Array} collection
+ *
+ * @return {Array}
+ */
+function keys(collection) {
+  return collection && Object.keys(collection) || [];
+}
+
+
+/**
+ * Shorthand for `keys(o).length`.
+ *
+ * @param  {Object|Array} collection
+ *
+ * @return {Number}
+ */
+function size(collection) {
+  return keys(collection).length;
+}
+
+
+/**
+ * Get the values in the collection.
+ *
+ * @param  {Object|Array} collection
+ *
+ * @return {Array}
+ */
+function values(collection) {
+  return map(collection, (val) => val);
+}
+
+
+/**
+ * Group collection members by attribute.
+ *
+ * @param {Object|Array} collection
+ * @param {Extractor} extractor
+ *
+ * @return {Object} map with { attrValue => [ a, b, c ] }
+ */
+function groupBy(collection, extractor, grouped = {}) {
+
+  extractor = toExtractor(extractor);
+
+  forEach(collection, function(val) {
+    let discriminator = extractor(val) || '_';
+
+    let group = grouped[discriminator];
+
+    if (!group) {
+      group = grouped[discriminator] = [];
+    }
+
+    group.push(val);
+  });
+
+  return grouped;
+}
+
+
+function uniqueBy(extractor, ...collections) {
+
+  extractor = toExtractor(extractor);
+
+  let grouped = {};
+
+  forEach(collections, (c) => groupBy(c, extractor, grouped));
+
+  let result = map(grouped, function(val, key) {
+    return val[0];
+  });
+
+  return result;
+}
+
+
+const unionBy = uniqueBy;
+
+
+
+/**
+ * Sort collection by criteria.
+ *
+ * @template T
+ *
+ * @param {Collection<T>} collection
+ * @param {Extractor<T, number | string>} extractor
+ *
+ * @return {Array}
+ */
+function sortBy(collection, extractor) {
+
+  extractor = toExtractor(extractor);
+
+  let sorted = [];
+
+  forEach(collection, function(value, key) {
+    let disc = extractor(value, key);
+
+    let entry = {
+      d: disc,
+      v: value
+    };
+
+    for (var idx = 0; idx < sorted.length; idx++) {
+      let { d } = sorted[idx];
+
+      if (disc < d) {
+        sorted.splice(idx, 0, entry);
+        return;
+      }
+    }
+
+    // not inserted, append (!)
+    sorted.push(entry);
+  });
+
+  return map(sorted, (e) => e.v);
+}
+
+
+/**
+ * Create an object pattern matcher.
+ *
+ * @example
+ *
+ * ```javascript
+ * const matcher = matchPattern({ id: 1 });
+ *
+ * let element = find(elements, matcher);
+ * ```
+ *
+ * @template T
+ *
+ * @param {T} pattern
+ *
+ * @return { (el: any) =>  boolean } matcherFn
+ */
+function matchPattern(pattern) {
+
+  return function(el) {
+
+    return every(pattern, function(val, key) {
+      return el[key] === val;
+    });
+
+  };
+}
+
+
+/**
+ * @param {string | ((e: any) => any) } extractor
+ *
+ * @return { (e: any) => any }
+ */
+function toExtractor(extractor) {
+
+  /**
+   * @satisfies { (e: any) => any }
+   */
+  return isFunction(extractor) ? extractor : (e) => {
+
+    // @ts-ignore: just works
+    return e[extractor];
+  };
+}
+
+
+/**
+ * @template T
+ * @param {Matcher<T>} matcher
+ *
+ * @return {MatchFn<T>}
+ */
+function toMatcher(matcher) {
+  return isFunction(matcher) ? matcher : (e) => {
+    return e === matcher;
+  };
+}
+
+
+function identity(arg) {
+  return arg;
+}
+
+function toNum(arg) {
+  return Number(arg);
+}
+
+/* global setTimeout clearTimeout */
+
+/**
+ * @typedef { {
+ *   (...args: any[]): any;
+ *   flush: () => void;
+ *   cancel: () => void;
+ * } } DebouncedFunction
+ */
+
+/**
+ * Debounce fn, calling it only once if the given time
+ * elapsed between calls.
+ *
+ * Lodash-style the function exposes methods to `#clear`
+ * and `#flush` to control internal behavior.
+ *
+ * @param  {Function} fn
+ * @param  {Number} timeout
+ *
+ * @return {DebouncedFunction} debounced function
+ */
+function debounce(fn, timeout) {
+
+  let timer;
+
+  let lastArgs;
+  let lastThis;
+
+  let lastNow;
+
+  function fire(force) {
+
+    let now = Date.now();
+
+    let scheduledDiff = force ? 0 : (lastNow + timeout) - now;
+
+    if (scheduledDiff > 0) {
+      return schedule(scheduledDiff);
+    }
+
+    fn.apply(lastThis, lastArgs);
+
+    clear();
+  }
+
+  function schedule(timeout) {
+    timer = setTimeout(fire, timeout);
+  }
+
+  function clear() {
+    if (timer) {
+      clearTimeout(timer);
+    }
+
+    timer = lastNow = lastArgs = lastThis = undefined;
+  }
+
+  function flush() {
+    if (timer) {
+      fire(true);
+    }
+
+    clear();
+  }
+
+  /**
+   * @type { DebouncedFunction }
+   */
+  function callback(...args) {
+    lastNow = Date.now();
+
+    lastArgs = args;
+    lastThis = this;
+
+    // ensure an execution is scheduled
+    if (!timer) {
+      schedule(timeout);
+    }
+  }
+
+  callback.flush = flush;
+  callback.cancel = clear;
+
+  return callback;
+}
+
+/**
+ * Throttle fn, calling at most once
+ * in the given interval.
+ *
+ * @param  {Function} fn
+ * @param  {Number} interval
+ *
+ * @return {Function} throttled function
+ */
+function throttle(fn, interval) {
+  let throttling = false;
+
+  return function(...args) {
+
+    if (throttling) {
+      return;
+    }
+
+    fn(...args);
+    throttling = true;
+
+    setTimeout(() => {
+      throttling = false;
+    }, interval);
+  };
+}
+
+/**
+ * Bind function against target <this>.
+ *
+ * @param  {Function} fn
+ * @param  {Object}   target
+ *
+ * @return {Function} bound function
+ */
+function bind(fn, target) {
+  return fn.bind(target);
+}
+
+/**
+ * Convenience wrapper for `Object.assign`.
+ *
+ * @param {Object} target
+ * @param {...Object} others
+ *
+ * @return {Object} the target
+ */
+function assign(target, ...others) {
+  return Object.assign(target, ...others);
+}
+
+/**
+ * Sets a nested property of a given object to the specified value.
+ *
+ * This mutates the object and returns it.
+ *
+ * @template T
+ *
+ * @param {T} target The target of the set operation.
+ * @param {(string|number)[]} path The path to the nested value.
+ * @param {any} value The value to set.
+ *
+ * @return {T}
+ */
+function set(target, path, value) {
+
+  let currentTarget = target;
+
+  forEach(path, function(key, idx) {
+
+    if (typeof key !== 'number' && typeof key !== 'string') {
+      throw new Error('illegal key type: ' + typeof key + '. Key should be of type number or string.');
+    }
+
+    if (key === 'constructor') {
+      throw new Error('illegal key: constructor');
+    }
+
+    if (key === '__proto__') {
+      throw new Error('illegal key: __proto__');
+    }
+
+    let nextKey = path[idx + 1];
+    let nextTarget = currentTarget[key];
+
+    if (isDefined(nextKey) && isNil(nextTarget)) {
+      nextTarget = currentTarget[key] = isNaN(+nextKey) ? {} : [];
+    }
+
+    if (isUndefined(nextKey)) {
+      if (isUndefined(value)) {
+        delete currentTarget[key];
+      } else {
+        currentTarget[key] = value;
+      }
+    } else {
+      currentTarget = nextTarget;
+    }
+  });
+
+  return target;
+}
+
+
+/**
+ * Gets a nested property of a given object.
+ *
+ * @param {Object} target The target of the get operation.
+ * @param {(string|number)[]} path The path to the nested value.
+ * @param {any} [defaultValue] The value to return if no value exists.
+ *
+ * @return {any}
+ */
+function get(target, path, defaultValue) {
+
+  let currentTarget = target;
+
+  forEach(path, function(key) {
+
+    // accessing nil property yields <undefined>
+    if (isNil(currentTarget)) {
+      currentTarget = undefined;
+
+      return false;
+    }
+
+    currentTarget = currentTarget[key];
+  });
+
+  return isUndefined(currentTarget) ? defaultValue : currentTarget;
+}
+
+/**
+ * Pick properties from the given target.
+ *
+ * @template T
+ * @template {any[]} V
+ *
+ * @param {T} target
+ * @param {V} properties
+ *
+ * @return Pick<T, V>
+ */
+function pick(target, properties) {
+
+  let result = {};
+
+  let obj = Object(target);
+
+  forEach(properties, function(prop) {
+
+    if (prop in obj) {
+      result[prop] = target[prop];
+    }
+  });
+
+  return result;
+}
+
+/**
+ * Pick all target properties, excluding the given ones.
+ *
+ * @template T
+ * @template {any[]} V
+ *
+ * @param {T} target
+ * @param {V} properties
+ *
+ * @return {Omit<T, V>} target
+ */
+function omit(target, properties) {
+
+  let result = {};
+
+  let obj = Object(target);
+
+  forEach(obj, function(prop, key) {
+
+    if (properties.indexOf(key) === -1) {
+      result[key] = prop;
+    }
+  });
+
+  return result;
+}
+
+/**
+ * Recursively merge `...sources` into given target.
+ *
+ * Does support merging objects; does not support merging arrays.
+ *
+ * @param {Object} target
+ * @param {...Object} sources
+ *
+ * @return {Object} the target
+ */
+function merge(target, ...sources) {
+
+  if (!sources.length) {
+    return target;
+  }
+
+  forEach(sources, function(source) {
+
+    // skip non-obj sources, i.e. null
+    if (!source || !isObject(source)) {
+      return;
+    }
+
+    forEach(source, function(sourceVal, key) {
+
+      if (key === '__proto__') {
+        return;
+      }
+
+      let targetVal = target[key];
+
+      if (isObject(sourceVal)) {
+
+        if (!isObject(targetVal)) {
+
+          // override target[key] with object
+          targetVal = {};
+        }
+
+        target[key] = merge(targetVal, sourceVal);
+      } else {
+        target[key] = sourceVal;
+      }
+
+    });
+  });
+
+  return target;
+}
+
+
+
+
+/***/ }),
+
 /***/ "./resources/qa.json":
 /*!***************************!*\
   !*** ./resources/qa.json ***!
@@ -2381,7 +3166,7 @@ function transform(node, transforms) {
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"QualityAssurance","uri":"http://some-company/schema/bpmn/qa","prefix":"qa","xml":{"tagAlias":"lowerCase"},"types":[{"name":"AnalyzedNode","extends":["bpmn:FlowNode"],"properties":[{"name":"suitable","isAttr":true,"type":"Float"}]},{"name":"AnalysisDetails","superClass":["Element"],"properties":[{"name":"lastChecked","isAttr":true,"type":"String"},{"name":"nextCheck","isAttr":true,"type":"String"},{"name":"comments","isMany":true,"type":"Comment"}]},{"name":"Comment","properties":[{"name":"author","isAttr":true,"type":"String"},{"name":"text","isBody":true,"type":"String"}]}],"emumerations":[],"associations":[]}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"QualityAssurance","uri":"http://some-company/schema/bpmn/qa","prefix":"qa","xml":{"tagAlias":"lowerCase"},"types":[{"name":"AnalyzedNode","extends":["bpmn:FlowNode"],"properties":[{"name":"suitable","isAttr":true,"type":"Float"}]},{"name":"AnalysisDetails","superClass":["Element"],"properties":[{"name":"lastChecked","isAttr":true,"type":"String"},{"name":"nextCheck","isAttr":true,"type":"String"},{"name":"comments","isMany":true,"type":"Comment"}]},{"name":"Comment","properties":[{"name":"author","isAttr":true,"type":"String"},{"name":"text","isBody":true,"type":"String"}]}],"emumerations":[],"associations":[]}');
 
 /***/ }),
 
@@ -2392,7 +3177,7 @@ module.exports = JSON.parse('{"name":"QualityAssurance","uri":"http://some-compa
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"vng","uri":"http://some-company/schema/bpmn/vng","prefix":"vng","xml":{"tagAlias":"lowerCase"},"types":[{"name":"zaken","superClass":["bpmn:ServiceTask"]}],"emumerations":[],"associations":[]}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"vng","uri":"http://some-company/schema/bpmn/vng","prefix":"vng","xml":{"tagAlias":"lowerCase"},"types":[{"name":"zaken","superClass":["bpmn:ServiceTask"]}],"emumerations":[],"associations":[]}');
 
 /***/ })
 

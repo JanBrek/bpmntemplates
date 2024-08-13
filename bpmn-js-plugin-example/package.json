@@ -26,8 +26,8 @@
     "camunda-modeler-plugin-helpers": "^5.0.0",
     "webpack": "^5.76.0",
     "webpack-cli": "^5.0.1",
-	"bpmn-js": "^8.2.2",
-    "diagram-js": "^7.2.3",
-    "tiny-svg": "^2.2.2"
+	  "bpmn-js": "^17.0.0",
+    "diagram-js": "^14.7.2",
+    "tiny-svg": "^3.1.2"
   }
 }
