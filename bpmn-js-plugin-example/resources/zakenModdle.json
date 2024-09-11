@@ -11,6 +11,8 @@
       "superClass": [
         "bpmn:ServiceTask"
       ]
+    },{
+      "name": "zakenNew"
     }
   ],
   "emumerations": [],

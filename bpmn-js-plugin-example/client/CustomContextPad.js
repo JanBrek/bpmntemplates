@@ -1,7 +1,8 @@
 class CustomContextPad {
-  constructor(config, contextPad, create, elementFactory, injector, translate) {
+  constructor(config, contextPad, create, elementFactory, bpmnFactory, injector, translate) {
     this.create = create;
     this.elementFactory = elementFactory;
+    this.bpmnFactory = bpmnFactory;
     this.translate = translate;
 
     if (config.autoPlace !== false) {
@@ -16,6 +17,7 @@ class CustomContextPad {
       autoPlace,
       create,
       elementFactory,
+      bpmnFactory,
       translate
     } = this;
 
@@ -56,14 +58,10 @@ CustomContextPad.$inject = [
   'contextPad',
   'create',
   'elementFactory',
+  'bpmnFactory',
   'injector',
   'translate'
 ];
-
-// export default {
-//   __init__: [ 'CustomContextPad' ],
-//   CustomContextPad: [ 'type', CustomContextPad ]
-// };
 
 module.exports = {
     __init__: ['CustomContextPad'],
